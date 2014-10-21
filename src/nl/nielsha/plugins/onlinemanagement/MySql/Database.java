@@ -8,6 +8,11 @@ import java.sql.Statement;
 import org.bukkit.plugin.Plugin;
 
 public abstract class Database {
+	
+	/**
+	 * @author -_Husky_-
+     * @author tips48
+	 */
 
 	protected Connection connection;
 	protected Plugin plugin;

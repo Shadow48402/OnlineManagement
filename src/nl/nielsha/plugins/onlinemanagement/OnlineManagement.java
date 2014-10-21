@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -56,7 +57,8 @@ public class OnlineManagement extends JavaPlugin implements Listener{
 			try {
 				Statement stat = this.con.getConnection().createStatement();
 				stat.executeUpdate("CREATE TABLE IF NOT EXISTS online("
-						+ "Username varchar(100))");
+						+ "Username varchar(100),"
+						+ "Kills varchar(100))");
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -98,4 +100,19 @@ public class OnlineManagement extends JavaPlugin implements Listener{
 			e1.printStackTrace();
 		}
 	}
+	
+	@EventHandler
+	public void onKill(PlayerDeathEvent e){
+		/**Player k = e.getEntity().getKiller();
+		String n = k.getName();
+
+		try {
+			Statement stat = this.con.getConnection().createStatement();
+			stat.executeUpdate("UPDATE online SET");
+		} catch (SQLException e1) {
+			e1.printStackTrace();
+		}
+		//Not finished at all tho :s*/
+	}
+	
 }

@@ -9,8 +9,10 @@ import org.bukkit.plugin.Plugin;
 import nl.nielsha.plugins.onlinemanagement.MySql.Database;
 
 public class MySQL extends Database {
-	/*
-	 * 
+	
+	/**
+	 * @author -_Husky_-
+     * @author tips48
 	 */
 	
 	private final String user;
