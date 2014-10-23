@@ -5,3 +5,5 @@ main: nl.nielsha.plugins.onlinemanagement.OnlineManagement
 commands:
   om:
     description: Online Management Main Command
+  online:
+    description: Check the online players in the server!
