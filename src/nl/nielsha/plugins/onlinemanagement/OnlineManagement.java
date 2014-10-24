@@ -1,6 +1,7 @@
 package nl.nielsha.plugins.onlinemanagement;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -16,6 +17,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -32,17 +35,22 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 	 * Copyright Niels Hamelink | Shadow48402
 	 * @author Niels Hamelink
 	 * @author Shadow48402
-	 * @version 1.0.1
+	 * @version 1.0.3
 	 */
 
 	private MySQL con;
 	private boolean connected;
 	private Logger logger = Logger.getLogger("Minecraft");
+	
+	private File s;
+	private FileConfiguration sConfig;
+	
 	public OnlineCommand oc = new OnlineCommand(this);
+	public StaffCommand sc = new StaffCommand(this);
 
 	private String prefix = ChatColor.GRAY + "[" + ChatColor.AQUA + "OnlineManagement" + ChatColor.GRAY + "] ";
 	private String notAllowed = this.prefix + ChatColor.RED + "You are not allowed to do this!";
-	private List<?> enabledInfo = this.getConfig().getList("EnabledInfo");
+	private List<String> enabledInfo = this.getConfig().getStringList("EnabledInfo");
 
 	public void onEnable(){
 		if(!this.getDataFolder().exists()){
@@ -59,6 +67,21 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 			this.getConfig().set("EnabledInfo", Arrays.asList("Since", "Kills", "Deads"));
 			this.getConfig().set("DefaultBanMessage", "&4You are banned from this server!");
 			this.saveConfig();                          //Save|Create config
+		}
+		
+		s = new File(this.getDataFolder().getAbsoluteFile(), "staff.yml"); //Getting staff.yml
+		if(!s.exists()){
+			sConfig = YamlConfiguration.loadConfiguration(s);
+			sConfig.set("Staff", Arrays.asList("koekjedeeg3"));
+			sConfig.set("koekjedeeg3", "Developer");
+			sConfig.set("Color.Developer.Name", "&b");
+			sConfig.set("Color.Developer.Rank", "&7");
+			try {
+				sConfig.save(s);
+			} catch (IOException e) {
+				e.printStackTrace();
+				logger.info("Staff file saving error?");
+			}
 		}
 
 		this.con = new MySQL( //Make connection varriable
@@ -85,7 +108,9 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		}
 
 		Bukkit.getPluginManager().registerEvents(this, this);
+		
 		getCommand("om").setExecutor(this);
+		getCommand("staff").setExecutor(this);
 		getCommand("online").setExecutor(this.oc);
 	}
 
@@ -226,7 +251,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 				s.sendMessage(ChatColor.GOLD + "===== (" + ChatColor.AQUA + "Online Management" + ChatColor.GOLD + ") =====");
 				s.sendMessage(ChatColor.GRAY + "Version: " + ChatColor.BLUE + this.getDescription().getVersion());
 				s.sendMessage(ChatColor.GRAY + "Made By: " + ChatColor.BLUE + "Niels Hamelink or Shadow48402");
-				s.sendMessage(ChatColor.GRAY + "Twitter: " + ChatColor.BLUE + "@NielsHamelink");
+				s.sendMessage(ChatColor.GRAY + "Twitter: " + ChatColor.BLUE + "Twitter: @Shadow48402");
 			}
 			if(args.length == 1){
 				if(args[0].equalsIgnoreCase("help")){
@@ -323,6 +348,10 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		*/
 
 
+		if(cmd.getName().equalsIgnoreCase("staff")){
+			sc.commandHandler(sender, args);  // Why not execute it on the default way, like you did before? IDK
+		}
+		
 		return false;
 	}
 

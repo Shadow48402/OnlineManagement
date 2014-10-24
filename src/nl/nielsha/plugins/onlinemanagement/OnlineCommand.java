@@ -15,7 +15,12 @@ public class OnlineCommand implements CommandExecutor{
 	public OnlineCommand(OnlineManagement plugin){
 		this.plugin = plugin;
 	}
-
+	
+	/**
+	 * @author Niels Hamelink
+	 * This class doesn't contain any APIs or resources
+	 */
+	
 	private String prefix = ChatColor.GRAY + "[" + ChatColor.AQUA + "OnlineManagement" + ChatColor.GRAY + "] ";
 
 	@SuppressWarnings("deprecation")
@@ -23,9 +28,10 @@ public class OnlineCommand implements CommandExecutor{
 		int i = 0;
 		if(cmd.getName().equalsIgnoreCase("online")){
 			if(args.length == 0){
-				if(sender instanceof Player){
-					StringBuilder sb = new StringBuilder();
-					for(Player o : Bukkit.getServer().getOnlinePlayers()) {
+
+				StringBuilder sb = new StringBuilder();
+				for(Player o : Bukkit.getServer().getOnlinePlayers()) {
+					if(sender instanceof Player){
 						if(o.isOp()){
 							sb.append(ChatColor.RED + o.getName() 
 									+ ChatColor.WHITE + ", ");
@@ -33,20 +39,27 @@ public class OnlineCommand implements CommandExecutor{
 							sb.append(ChatColor.GRAY + o.getName() 
 									+ ChatColor.WHITE + ", ");
 						}
-						i++;
+					} else {
+						sb.append(o.getName() + ", ");
 					}
-					String list = sb.toString();
-					Pattern p = Pattern.compile(", $");
-					Matcher m = p.matcher(list);
-					list = m.replaceAll("");
+					i++;
+				}
+				String list = sb.toString();
+				Pattern p = Pattern.compile(", $");
+				Matcher m = p.matcher(list);
+				list = m.replaceAll("");
+
+				if(sender instanceof Player){
 					Player s = (Player) sender;
 					s.sendMessage(this.prefix + ChatColor.GREEN + "Online Players (" 
 							+ ChatColor.GRAY + i 
 							+ ChatColor.GREEN + ")");
 					s.sendMessage(list);
 				} else {
-
+					sender.sendMessage("Online Players (" + i + ")");
+					sender.sendMessage(list);
 				}
+
 			} else {
 				if(sender instanceof Player){
 					Player p = (Player) sender;

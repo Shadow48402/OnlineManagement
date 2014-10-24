@@ -1,5 +1,5 @@
 name: OnlineManagement
-version: 1.0.1
+version: 1.0.3
 author: Shadow48402
 main: nl.nielsha.plugins.onlinemanagement.OnlineManagement
 commands:
@@ -7,3 +7,5 @@ commands:
     description: Online Management Main Command
   online:
     description: Check the online players in the server!
+  staff:
+    description: Create, control and watch the staff list
