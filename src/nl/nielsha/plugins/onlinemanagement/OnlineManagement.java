@@ -35,16 +35,18 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 	 * Copyright Niels Hamelink | Shadow48402
 	 * @author Niels Hamelink
 	 * @author Shadow48402
-	 * @version 1.0.3
+	 * @version 1.0.4
 	 */
 
 	private MySQL con;
 	private boolean connected;
 	private Logger logger = Logger.getLogger("Minecraft");
-	
+
 	private File s;
 	private FileConfiguration sConfig;
-	
+	private File b;
+	private FileConfiguration bConfig;
+
 	public OnlineCommand oc = new OnlineCommand(this);
 	public StaffCommand sc = new StaffCommand(this);
 
@@ -65,11 +67,10 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 			this.getConfig().set("Username", "user");
 			this.getConfig().set("Password", "pass");
 			this.getConfig().set("EnabledInfo", Arrays.asList("Since", "Kills", "Deads"));
-			this.getConfig().set("DefaultBanMessage", "&4You are banned from this server!");
 			this.saveConfig();                          //Save|Create config
 		}
-		
-		s = new File(this.getDataFolder().getAbsoluteFile(), "staff.yml"); //Getting staff.yml
+
+		s = new File(this.getDataFolder().getAbsolutePath(), "staff.yml"); //Getting staff.yml
 		if(!s.exists()){
 			sConfig = YamlConfiguration.loadConfiguration(s);
 			sConfig.set("Staff", Arrays.asList("koekjedeeg3"));
@@ -83,6 +84,19 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 				logger.info("Staff file saving error?");
 			}
 		}
+		
+		b = new File(this.getDataFolder().getAbsolutePath(), "bans.yml");
+		if(!b.exists()){
+			bConfig = YamlConfiguration.loadConfiguration(b);
+			this.getConfig().set("DefaultBanMessage", "&4You are banned from this server!");
+			try {
+				bConfig.save(b);
+			} catch (IOException e) {
+				e.printStackTrace();
+				logger.info("Bans file saving error?");
+			}
+		}
+		
 
 		this.con = new MySQL( //Make connection varriable
 				this,
@@ -103,12 +117,12 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 
 		if(connected){ //Check or is connected
 			this.createOnlineTable();  //Create online table (if not exists)
-			//this.createBanTable();     //Create ban table (if not exists)
-			//this.createTimeBanTable(); //Create time ban table (if not exists)
+			this.createBanTable();     //Create ban table (if not exists)
+			this.createTimeBanTable(); //Create time ban table (if not exists)
 		}
 
 		Bukkit.getPluginManager().registerEvents(this, this);
-		
+
 		getCommand("om").setExecutor(this);
 		getCommand("staff").setExecutor(this);
 		getCommand("online").setExecutor(this.oc);
@@ -128,13 +142,24 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 	public void onLoginEvent(PlayerLoginEvent e){
 		/**
 		 *   Bans Part
-		 *
+		 */
 
 		Player p = e.getPlayer();
 		if(p.isBanned()){
-			e.setKickMessage(ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("DefaultBanMessage")));
+			try {
+				Statement stat = this.con.getConnection().createStatement();
+				ResultSet s = stat.executeQuery("SELECT reason FROM bans WHERE UUID='" + p.getUniqueId().toString() + "'");
+				s.next();
+				String r = s.getString("reason");
+				if(r == null){
+					e.setKickMessage(ChatColor.translateAlternateColorCodes('&', this.bConfig.getString("DefaultBanMessage")));
+				} else {
+					e.setKickMessage(ChatColor.translateAlternateColorCodes('&', r));
+				}
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
 		}
-		*/
 	}
 
 	@EventHandler
@@ -234,7 +259,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		 */
 	}
 
-	//@SuppressWarnings("deprecation")
+	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
 
 		/**
@@ -296,10 +321,16 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 
 		/**
 		 *   Ban Commands
-		 *
+		 */
 
 		if(cmd.getName().equalsIgnoreCase("ban")){
 			if(args.length >= 1){
+				if(sender instanceof Player){
+					if(!((Player)sender).hasPermission("onlinemanagement.ban")){
+						((Player)sender).sendMessage(this.prefix + ChatColor.RED + "You're not allowed to do this!");
+						return true;
+					}
+				}
 				Player t = Bukkit.getPlayer(args[0]);
 
 				if(t == null){
@@ -321,6 +352,11 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 						if(args.length == 1){
 							t.kickPlayer(ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("DefaultBanMessage")));
 							stat.executeUpdate("INSERT INTO `bans` (UUID, Since) VALUES('" + id + "', '" + d + "')");
+							try {
+								bConfig.save(b);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 						} else {
 							String re = this.getArguments(args, 1);
 							t.kickPlayer(ChatColor.translateAlternateColorCodes('&', re));
@@ -332,6 +368,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 							logger.info("[OnlineManagement] You've banned " + t.getName() + "!");
 						}
 						t.setBanned(true);
+						bConfig.set("Bans." + t.getName() + ".UUID", t.getUniqueId().toString());
 					} else {
 						//Already banned
 					}
@@ -345,13 +382,45 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 				}
 			}
 		}
-		*/
-
+		
+		if(cmd.getName().equalsIgnoreCase("unban")){
+			if(sender instanceof Player){
+				if(!((Player)sender).hasPermission("onlinemanagement.unban")){
+					((Player)sender).sendMessage(this.prefix + ChatColor.RED + "You're not allowed to do this!");
+					return true;
+				}
+			}
+			if(args.length != 1){
+				if(sender instanceof Player){
+					((Player) sender).sendMessage(this.prefix + ChatColor.RED + "You're using not the right arguments!");
+				} else {
+					sender.sendMessage("You're using not the right arguments!");
+				}
+				return true;
+			}
+			List<String> banList = bConfig.getStringList("Bans");
+			if(banList.contains(args[0])){
+				String id = bConfig.getString("Bans." + args[0] + ".UUID");
+				try {
+					Statement stat = this.con.getConnection().createStatement();
+					stat.executeUpdate("DELETE FROM bans WHERE UUID='" + id + "'");
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+				banList.remove(args[0]);
+			} else {
+				if(sender instanceof Player){
+					((Player) sender).sendMessage(this.prefix + ChatColor.RED + "That player is not banned!");
+				} else {
+					sender.sendMessage("[OnlineManagement] That player is not banned!");
+				}
+			}
+		}
 
 		if(cmd.getName().equalsIgnoreCase("staff")){
 			sc.commandHandler(sender, args);  // Why not execute it on the default way, like you did before? IDK
 		}
-		
+
 		return false;
 	}
 
@@ -375,7 +444,6 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		}
 	}
 
-	/**
 	public void createTimeBanTable(){
 		try {
 			Statement stat = this.con.getConnection().createStatement(); 
@@ -402,7 +470,6 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 			logger.info("[OnlineManagement] MySQL Error?!");
 		}
 	}
-	*/
 
 	public void deleteOnlineTable(){
 		try {
@@ -416,7 +483,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 
 	/**
 	 *   Argument Splitting
-	 *
+	 */
 
 	public String getArguments(String[] args, int start) {
 		StringBuilder br = new StringBuilder();
@@ -428,6 +495,5 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		}
 		return br.toString();
 	}
-	*/
 
 }

@@ -1,5 +1,5 @@
 name: OnlineManagement
-version: 1.0.3
+version: 1.0.4
 author: Shadow48402
 main: nl.nielsha.plugins.onlinemanagement.OnlineManagement
 commands:

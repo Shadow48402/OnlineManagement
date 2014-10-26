@@ -60,7 +60,15 @@ public class OnlineCommand implements CommandExecutor{
 					sender.sendMessage(list);
 				}
 
-			} else {
+			} 
+			if(args.length == 1){
+				String s = args[0];
+				if(s.equalsIgnoreCase("")){
+					
+				}
+			}
+			
+			if(args.length >= 2){
 				if(sender instanceof Player){
 					Player p = (Player) sender;
 					p.sendMessage(this.prefix + ChatColor.RED + "Invalid arguments!");

@@ -102,7 +102,7 @@ public class StaffCommand{
 					String nc = c.getString("Color." + r + ".Name"); // Color of the name
 					String rc = c.getString("Color." + r + ".Rank"); // Color of the rank
 					if(sender instanceof Player){
-						b.append(ChatColor.GRAY + "[" 
+						b.append(ChatColor.WHITE + "[" 
 								+ ChatColor.translateAlternateColorCodes('&', rc) + r
 								+ ChatColor.WHITE + "] " 
 								+ ChatColor.translateAlternateColorCodes('&', nc) + op 
@@ -124,6 +124,10 @@ public class StaffCommand{
 					sender.sendMessage(list);
 				}
 			}
+		}
+		
+		if(args.length == 2){
+			
 		}
 
 		return false;
