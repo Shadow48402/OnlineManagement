@@ -88,7 +88,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		b = new File(this.getDataFolder().getAbsolutePath(), "bans.yml");
 		if(!b.exists()){
 			bConfig = YamlConfiguration.loadConfiguration(b);
-			this.getConfig().set("DefaultBanMessage", "&4You are banned from this server!");
+			bConfig.set("DefaultBanMessage", "&4You are banned from this server!");
 			try {
 				bConfig.save(b);
 			} catch (IOException e) {
@@ -152,9 +152,9 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 				s.next();
 				String r = s.getString("reason");
 				if(r == null){
-					e.setKickMessage(ChatColor.translateAlternateColorCodes('&', this.bConfig.getString("DefaultBanMessage")));
+					e.setKickMessage(ChatColor.RED + "You're banned because: \n" + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', this.bConfig.getString("DefaultBanMessage")));
 				} else {
-					e.setKickMessage(ChatColor.translateAlternateColorCodes('&', r));
+					e.setKickMessage(ChatColor.RED + "You're banned because: \n" + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', r));
 				}
 			} catch (SQLException e1) {
 				e1.printStackTrace();
@@ -350,16 +350,11 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 					ResultSet r = stat.executeQuery("SELECT * FROM bans WHERE UUID='" + id + "'");
 					if(!r.next()){
 						if(args.length == 1){
-							t.kickPlayer(ChatColor.translateAlternateColorCodes('&', this.getConfig().getString("DefaultBanMessage")));
+							t.kickPlayer(ChatColor.RED + "You're banned because: \n" + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', bConfig.getString("DefaultBanMessage")));
 							stat.executeUpdate("INSERT INTO `bans` (UUID, Since) VALUES('" + id + "', '" + d + "')");
-							try {
-								bConfig.save(b);
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
 						} else {
 							String re = this.getArguments(args, 1);
-							t.kickPlayer(ChatColor.translateAlternateColorCodes('&', re));
+							t.kickPlayer(ChatColor.RED + "You're banned because: \n" + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', re));
 							stat.executeUpdate("INSERT INTO `bans` (UUID, Since, Reason) VALUES('" + id + "', '" + d + "', '" + re + "')");
 						}
 						if(sender instanceof Player){
@@ -369,8 +364,17 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 						}
 						t.setBanned(true);
 						bConfig.set("Bans." + t.getName() + ".UUID", t.getUniqueId().toString());
+						try {
+							bConfig.save(b);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					} else {
-						//Already banned
+						if(sender instanceof Player){
+							((Player) sender).sendMessage(this.prefix + ChatColor.RED + "That player is already banned!");
+						} else {
+							sender.sendMessage("[OnlineManagement] That player is already banned!");
+						}
 					}
 				} catch (SQLException e) {
 					if(sender instanceof Player){
