@@ -35,20 +35,24 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 	 * Copyright Niels Hamelink | Shadow48402
 	 * @author Niels Hamelink
 	 * @author Shadow48402
-	 * @version 1.0.4
+	 * @version 1.0.5
 	 */
 
-	private MySQL con;
+	public MySQL con;
 	private boolean connected;
-	private Logger logger = Logger.getLogger("Minecraft");
+	private final Logger logger = Logger.getLogger("Minecraft");
 
 	private File s;
 	private FileConfiguration sConfig;
 	private File b;
 	private FileConfiguration bConfig;
+	private File m;
+	private FileConfiguration mConfig;
 
 	public OnlineCommand oc = new OnlineCommand(this);
 	public StaffCommand sc = new StaffCommand(this);
+	public JoinListener jl = new JoinListener(this);
+	public LeaveListener ll = new LeaveListener(this);
 
 	private String prefix = ChatColor.GRAY + "[" + ChatColor.AQUA + "OnlineManagement" + ChatColor.GRAY + "] ";
 	private String notAllowed = this.prefix + ChatColor.RED + "You are not allowed to do this!";
@@ -97,6 +101,19 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 			}
 		}
 		
+		m = new File(this.getDataFolder().getAbsolutePath(), "messages.yml");
+		if(!m.exists()){
+			mConfig = YamlConfiguration.loadConfiguration(m);
+			mConfig.set("JoinMessage", "&7[&b+&7]&6 %name% joined the server! :)");
+			mConfig.set("LeaveMessage", "&7[&4-&7]&c %name% left the server! :(");
+			try{
+				mConfig.save(m);
+			} catch(IOException e){
+				e.printStackTrace();
+				logger.info("Messages file saving error?");
+			}
+		}
+		
 
 		this.con = new MySQL( //Make connection varriable
 				this,
@@ -107,13 +124,17 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 				this.getConfig().getString("Password")
 				);
 
-		try {
-			this.con.openConnection(); //Open the MySQL connection
-			connected = true; // Check or the plugin is connected
-		} catch (ClassNotFoundException | SQLException e) {
-			logger.info("[OnlineManagement] Can't connect to MySQL database!");
-			connected = false; // Check or the plugin is connected
-		}
+		Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable(){
+			public void run(){
+				try {
+					con.openConnection(); //Open the MySQL connection
+					connected = true; // Check or the plugin is connected
+				} catch (ClassNotFoundException | SQLException e) {
+					logger.info("[OnlineManagement] Can't connect to MySQL database!");
+					connected = false; // Check or the plugin is connected
+				}
+			}
+		}, 0L, 121300L);
 
 		if(connected){ //Check or is connected
 			this.createOnlineTable();  //Create online table (if not exists)
@@ -122,6 +143,8 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		}
 
 		Bukkit.getPluginManager().registerEvents(this, this);
+		Bukkit.getPluginManager().registerEvents(this.jl, this);
+		Bukkit.getPluginManager().registerEvents(this.ll, this);
 
 		getCommand("om").setExecutor(this);
 		getCommand("staff").setExecutor(this);
