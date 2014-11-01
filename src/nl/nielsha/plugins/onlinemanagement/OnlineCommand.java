@@ -20,8 +20,6 @@ public class OnlineCommand implements CommandExecutor{
 	 * @author Niels Hamelink
 	 * This class doesn't contain any APIs or resources
 	 */
-	
-	private String prefix = ChatColor.GRAY + "[" + ChatColor.AQUA + "OnlineManagement" + ChatColor.GRAY + "] ";
 
 	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
@@ -51,7 +49,7 @@ public class OnlineCommand implements CommandExecutor{
 
 				if(sender instanceof Player){
 					Player s = (Player) sender;
-					s.sendMessage(this.prefix + ChatColor.GREEN + "Online Players (" 
+					s.sendMessage(this.plugin.prefix + ChatColor.GREEN + "Online Players (" 
 							+ ChatColor.GRAY + i 
 							+ ChatColor.GREEN + ")");
 					s.sendMessage(list);
@@ -71,7 +69,7 @@ public class OnlineCommand implements CommandExecutor{
 			if(args.length >= 2){
 				if(sender instanceof Player){
 					Player p = (Player) sender;
-					p.sendMessage(this.prefix + ChatColor.RED + "Invalid arguments!");
+					p.sendMessage(this.plugin.prefix + ChatColor.RED + "Invalid arguments!");
 				} else {
 					System.out.println("[OnlineManagement] Invalid arguments!");
 				}

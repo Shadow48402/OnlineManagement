@@ -35,7 +35,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 	 * Copyright Niels Hamelink | Shadow48402
 	 * @author Niels Hamelink
 	 * @author Shadow48402
-	 * @version 1.0.5
+	 * @version 1.0.5.2
 	 */
 
 	public MySQL con;
@@ -54,7 +54,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 	public JoinListener jl = new JoinListener(this);
 	public LeaveListener ll = new LeaveListener(this);
 
-	private String prefix = ChatColor.GRAY + "[" + ChatColor.AQUA + "OnlineManagement" + ChatColor.GRAY + "] ";
+	public String prefix = ChatColor.GRAY + "[" + ChatColor.AQUA + "OnlineManagement" + ChatColor.GRAY + "] ";
 	private String notAllowed = this.prefix + ChatColor.RED + "You are not allowed to do this!";
 	private List<String> enabledInfo = this.getConfig().getStringList("EnabledInfo");
 
@@ -127,6 +127,10 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable(){
 			public void run(){
 				try {
+					if(connected){
+						con.closeConnection();
+						connected = false;
+					}
 					con.openConnection(); //Open the MySQL connection
 					connected = true; // Check or the plugin is connected
 				} catch (ClassNotFoundException | SQLException e) {
@@ -134,7 +138,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 					connected = false; // Check or the plugin is connected
 				}
 			}
-		}, 0L, 121300L);
+		}, 0L, 6000L);
 
 		if(connected){ //Check or is connected
 			this.createOnlineTable();  //Create online table (if not exists)

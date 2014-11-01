@@ -26,8 +26,6 @@ public class StaffCommand{
 		this.plugin = plugin;
 	}
 
-	private String prefix = ChatColor.GRAY + "[" + ChatColor.AQUA + "OnlineManagement" + ChatColor.GRAY + "] ";
-
 	@SuppressWarnings({ "deprecation" })
 	public boolean commandHandler(CommandSender sender, String[] args){
 		File f = new File(plugin.getDataFolder().getAbsolutePath(), "staff.yml");
@@ -49,7 +47,7 @@ public class StaffCommand{
 		if(args.length == 1){
 			if(args[0].equalsIgnoreCase("help")){
 				if(sender instanceof Player){
-					((Player) sender).sendMessage(ChatColor.GRAY + "(============= " + this.prefix + " =============)");
+					((Player) sender).sendMessage(ChatColor.GRAY + "(============= " + this.plugin.prefix + " =============)");
 					((Player) sender).sendMessage(ChatColor.BLUE + "/staff list - Watch the staff list");
 					((Player) sender).sendMessage(ChatColor.BLUE + "/staff online - Watch the online staff");
 				} else {
@@ -78,7 +76,7 @@ public class StaffCommand{
 
 				String s = b.toString();
 				if(sender instanceof Player){
-					((Player) sender).sendMessage(this.prefix + ChatColor.GOLD + "Staff List:");
+					((Player) sender).sendMessage(this.plugin.prefix + ChatColor.GOLD + "Staff List:");
 					((Player) sender).sendMessage(s);
 				} else {
 					sender.sendMessage("[OnlineManagement] Staff List:");
@@ -117,7 +115,7 @@ public class StaffCommand{
 				list = m.replaceAll("");
 
 				if(sender instanceof Player){
-					((Player) sender).sendMessage(this.prefix + ChatColor.GOLD + "Online Staff:");
+					((Player) sender).sendMessage(this.plugin.prefix + ChatColor.GOLD + "Online Staff:");
 					((Player) sender).sendMessage(list);
 				} else {
 					sender.sendMessage("[OnlineManagement] Online Staff:");
