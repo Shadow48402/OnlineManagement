@@ -1,5 +1,5 @@
 name: OnlineManagement
-version: 1.0.5.2
+version: 1.0.6
 author: Shadow48402
 main: nl.nielsha.plugins.onlinemanagement.OnlineManagement
 commands:
@@ -9,7 +9,5 @@ commands:
     description: Check the online players in the server!
   staff:
     description: Create, control and watch the staff list
-  ban:
-    description: Ban someone with your banhammer >:)
-  unban:
-    description: Say pardon to someone you banned
+  friend:
+    description: Manage your friend list, add, remove, look.

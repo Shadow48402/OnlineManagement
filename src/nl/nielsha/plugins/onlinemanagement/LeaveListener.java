@@ -10,6 +10,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 public class LeaveListener implements Listener{
+	
+	/**
+	 * @author Niels Hamelink
+	 * This class doesn't contain any APIs or resources
+	 */
+	
 	public OnlineManagement plugin;
 	public LeaveListener(OnlineManagement plugin){
 		this.plugin = plugin;

@@ -10,6 +10,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 public class JoinListener implements Listener{
+	
+	/**
+	 * @author Niels Hamelink
+	 * This class doesn't contain any APIs or resources
+	 */
+	
 	public OnlineManagement plugin;
 	public JoinListener(OnlineManagement plugin){
 		this.plugin = plugin;
@@ -23,8 +29,8 @@ public class JoinListener implements Listener{
 		m = ChatColor.translateAlternateColorCodes('&', c.getString("JoinMessage"))
 				.replaceAll("%name%", e.getPlayer().getName())
 				.replaceAll("%displayname%", e.getPlayer().getDisplayName())
-				.replaceAll("%level%", String.valueOf(e.getPlayer().getLevel()))
-				.replaceAll("%world%", e.getPlayer().getWorld().getName());
+				.replaceAll("%level%", String.valueOf(e.getPlayer().getLevel())
+				.replaceAll("%world%", e.getPlayer().getWorld().getName()));
 		
 		e.setJoinMessage(m);
 	}

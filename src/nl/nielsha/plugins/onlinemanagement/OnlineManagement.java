@@ -35,7 +35,8 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 	 * Copyright Niels Hamelink | Shadow48402
 	 * @author Niels Hamelink
 	 * @author Shadow48402
-	 * @version 1.0.5.2
+	 * @version 1.0.6
+	 * @website SmallFiles.eu
 	 */
 
 	public MySQL con;
@@ -51,6 +52,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 
 	public OnlineCommand oc = new OnlineCommand(this);
 	public StaffCommand sc = new StaffCommand(this);
+	public FriendCommand fc = new FriendCommand(this);
 	public JoinListener jl = new JoinListener(this);
 	public LeaveListener ll = new LeaveListener(this);
 
@@ -88,7 +90,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 				logger.info("Staff file saving error?");
 			}
 		}
-		
+
 		b = new File(this.getDataFolder().getAbsolutePath(), "bans.yml");
 		if(!b.exists()){
 			bConfig = YamlConfiguration.loadConfiguration(b);
@@ -100,7 +102,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 				logger.info("Bans file saving error?");
 			}
 		}
-		
+
 		m = new File(this.getDataFolder().getAbsolutePath(), "messages.yml");
 		if(!m.exists()){
 			mConfig = YamlConfiguration.loadConfiguration(m);
@@ -113,7 +115,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 				logger.info("Messages file saving error?");
 			}
 		}
-		
+
 
 		this.con = new MySQL( //Make connection varriable
 				this,
@@ -123,27 +125,12 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 				this.getConfig().getString("Username"),
 				this.getConfig().getString("Password")
 				);
-
-		Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable(){
-			public void run(){
-				try {
-					if(connected){
-						con.closeConnection();
-						connected = false;
-					}
-					con.openConnection(); //Open the MySQL connection
-					connected = true; // Check or the plugin is connected
-				} catch (ClassNotFoundException | SQLException e) {
-					logger.info("[OnlineManagement] Can't connect to MySQL database!");
-					connected = false; // Check or the plugin is connected
-				}
-			}
-		}, 0L, 6000L);
-
-		if(connected){ //Check or is connected
-			this.createOnlineTable();  //Create online table (if not exists)
-			this.createBanTable();     //Create ban table (if not exists)
-			this.createTimeBanTable(); //Create time ban table (if not exists)
+		
+		try {
+			con.openConnection();
+			con.closeConnection();
+		} catch (ClassNotFoundException | SQLException e) {
+			System.out.println("Can't make connection with mysql!");
 		}
 
 		Bukkit.getPluginManager().registerEvents(this, this);
@@ -153,15 +140,19 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		getCommand("om").setExecutor(this);
 		getCommand("staff").setExecutor(this);
 		getCommand("online").setExecutor(this.oc);
+		getCommand("friend").setExecutor(this.fc);
 	}
 
 	public void onDisable(){
 		try {
+			con.openConnection();
 			this.deleteOnlineTable();
 			this.createOnlineTable();
 			con.closeConnection(); //Closing connection
 		} catch (SQLException e) {
-			e.printStackTrace();
+			System.out.println("ERROR: Cannot delete tables (MySQL)");
+		} catch (ClassNotFoundException e) {
+			System.out.println("ERROR: Cannot delete tables (MySQL)");
 		}
 	}
 
@@ -174,17 +165,21 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		Player p = e.getPlayer();
 		if(p.isBanned()){
 			try {
+				con.openConnection();
 				Statement stat = this.con.getConnection().createStatement();
 				ResultSet s = stat.executeQuery("SELECT reason FROM bans WHERE UUID='" + p.getUniqueId().toString() + "'");
 				s.next();
 				String r = s.getString("reason");
+				con.closeConnection();
 				if(r == null){
 					e.setKickMessage(ChatColor.RED + "You're banned because: \n" + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', this.bConfig.getString("DefaultBanMessage")));
 				} else {
 					e.setKickMessage(ChatColor.RED + "You're banned because: \n" + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', r));
 				}
 			} catch (SQLException e1) {
-				e1.printStackTrace();
+				System.out.println("ERROR: Can't get bans from mysql!");
+			} catch (ClassNotFoundException e1) {
+				System.out.println("ERROR: Can't get bans from mysql! #2");
 			}
 		}
 	}
@@ -202,11 +197,14 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 
 		if(connected){
 			try {
+				con.openConnection();
 				Statement stat = this.con.getConnection().createStatement();
 				stat.executeUpdate("INSERT INTO `online` (Username, Since) VALUES('" + n + "', '" + d2 + "')");
+				con.closeConnection();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
-				logger.info("[OnlineManagement] MySQL Error?!");
+				logger.info("[OnlineManagement] You can't connect with MySQL!");
+			} catch (ClassNotFoundException e1) {
+				logger.info("[OnlineManagement] You can't connect with MySQL!");
 			}
 		}
 		/**
@@ -225,11 +223,14 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 
 		if(connected){
 			try {
+				con.openConnection();
 				Statement stat = this.con.getConnection().createStatement();
 				stat.executeUpdate("DELETE FROM `online` WHERE Username='" + n + "'");
+				con.closeConnection();
 			} catch (SQLException e1) {
-				e1.printStackTrace();
-				logger.info("[OnlineManagement] MySQL Error?!");
+				logger.info("[OnlineManagement] You can't connect with MySQL!");
+			} catch (ClassNotFoundException e1) {
+				logger.info("[OnlineManagement] You can't connect with MySQL!");
 			}
 		}
 
@@ -258,6 +259,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 
 		if(connected){
 			try {
+				con.openConnection();
 				Statement stat = this.con.getConnection().createStatement();
 
 				if(e.getEntity().getKiller() instanceof Player){
@@ -275,10 +277,12 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 					int deads = r2.getInt("Deads");
 					stat.executeUpdate("UPDATE online SET Deads='" + (deads+1) + "' WHERE Username='" + n2 + "'");
 				}
+				con.closeConnection();
 
 			} catch (SQLException e1) {
-				e1.printStackTrace();
-				logger.info("[OnlineManagement] MySQL Error?!");
+				logger.info("[OnlineManagement] You can't connect with MySQL!");
+			} catch (ClassNotFoundException e1) {
+				logger.info("[OnlineManagement] You can't connect with MySQL!");
 			}
 		}
 		/**
@@ -286,7 +290,6 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		 */
 	}
 
-	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
 
 		/**
@@ -326,7 +329,17 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 					}
 					if(args[1].equalsIgnoreCase("delete")){
 						if(s.hasPermission("onlinemanagement.table.delete")){
+							try {
+								con.openConnection();
+							} catch (ClassNotFoundException | SQLException e) {
+								logger.info("[OnlineManagement] You can't connect with MySQL!");
+							}
 							deleteOnlineTable();
+							try {
+								con.closeConnection();
+							} catch (SQLException e) {
+								logger.info("[OnlineManagement] You can't connect with MySQL!");
+							}
 						} else {
 							s.sendMessage(this.notAllowed);
 						}
@@ -336,8 +349,18 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 					 */
 					if(args[1].equalsIgnoreCase("reset")){
 						if(s.hasPermission("onlinemanagement.table.reset")){
+							try {
+								con.openConnection();
+							} catch (ClassNotFoundException | SQLException e) {
+								e.printStackTrace();
+							}
 							deleteOnlineTable();
 							createOnlineTable();
+							try {
+								con.closeConnection();
+							} catch (SQLException e) {
+								logger.info("[OnlineManagement] You can't connect with MySQL!");
+							}
 						} else {
 							s.sendMessage(this.notAllowed);
 						}
@@ -350,6 +373,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 		 *   Ban Commands
 		 */
 
+		/*
 		if(cmd.getName().equalsIgnoreCase("ban")){
 			if(args.length >= 1){
 				if(sender instanceof Player){
@@ -413,7 +437,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 				}
 			}
 		}
-		
+
 		if(cmd.getName().equalsIgnoreCase("unban")){
 			if(sender instanceof Player){
 				if(!((Player)sender).hasPermission("onlinemanagement.unban")){
@@ -447,6 +471,7 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 				}
 			}
 		}
+		*/
 
 		if(cmd.getName().equalsIgnoreCase("staff")){
 			sc.commandHandler(sender, args);  // Why not execute it on the default way, like you did before? IDK
@@ -497,6 +522,18 @@ public class OnlineManagement extends JavaPlugin implements Listener, CommandExe
 					+ "Since varchar(100),"
 					+ "Reason varchar(200) DEFAULT null)"); // Creating the ban table
 		} catch (SQLException e) {
+			e.printStackTrace();
+			logger.info("[OnlineManagement] MySQL Error?!");
+		}
+	}
+
+	public void createLoginTable(){
+		try {
+			Statement stat = this.con.getConnection().createStatement();
+			stat.executeUpdate("CREATE TABLE IF NOT EXISTS login("
+					+ "Username VARCHAR(100),"
+					+ "Password VARCHAR(100))");
+		} catch(SQLException e){
 			e.printStackTrace();
 			logger.info("[OnlineManagement] MySQL Error?!");
 		}

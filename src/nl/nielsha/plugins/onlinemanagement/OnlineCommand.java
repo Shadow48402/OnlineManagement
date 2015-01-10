@@ -11,6 +11,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class OnlineCommand implements CommandExecutor{
+	
+	/**
+	 * @author Niels Hamelink
+	 * This class doesn't contain any APIs or resources
+	 */
+	
 	public OnlineManagement plugin;
 	public OnlineCommand(OnlineManagement plugin){
 		this.plugin = plugin;
